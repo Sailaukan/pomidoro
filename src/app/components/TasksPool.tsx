@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { usePomodoroContext } from '../context/PomodoroContext';
+import { GiTomato } from 'react-icons/gi';
 
 export default function TasksPool() {
     const { state, dispatch } = usePomodoroContext();
@@ -10,7 +11,6 @@ export default function TasksPool() {
     const [newTaskCategory, setNewTaskCategory] = React.useState('');
     const [selectedTags, setSelectedTags] = React.useState<string[]>([]);
     const [showNotes, setShowNotes] = React.useState<string | null>(null);
-    const [newSubtask, setNewSubtask] = React.useState('');
     const [showAddTask, setShowAddTask] = React.useState(false);
 
     const handleAddTask = (e: React.FormEvent) => {
@@ -28,7 +28,6 @@ export default function TasksPool() {
                     tags: selectedTags,
                     priority: newTaskPriority,
                     notes: '',
-                    subtasks: [],
                     createdAt: new Date().toISOString(),
                     estimatedDuration: 25, // Default duration in minutes
                 },
@@ -36,23 +35,6 @@ export default function TasksPool() {
             setNewTaskTitle('');
             setNewTaskCategory('');
             setSelectedTags([]);
-        }
-    };
-
-    const handleAddSubtask = (taskId: string) => {
-        if (newSubtask.trim()) {
-            dispatch({
-                type: 'ADD_SUBTASK',
-                payload: {
-                    taskId,
-                    subtask: {
-                        id: Date.now().toString(),
-                        title: newSubtask.trim(),
-                        completed: false,
-                    },
-                },
-            });
-            setNewSubtask('');
         }
     };
 
@@ -83,7 +65,7 @@ export default function TasksPool() {
     };
 
     return (
-        <div className='flex flex-col h-full p-6 bg-white rounded-xl border border-gray-200'>
+        <div className='flex flex-col h-full p-4 bg-white rounded-xl border border-gray-200'>
             <div className='flex items-center justify-between mb-6'>
                 <h2 className='text-2xl font-bold text-gray-800'>Tasks</h2>
             </div>
@@ -92,136 +74,147 @@ export default function TasksPool() {
                 {state.tasks.map((task) => (
                     <div
                         key={task.id}
-                        className={`p-4 border rounded-lg transition-all duration-200 hover:shadow-md 
-                            ${task.completed ? 'bg-gray-50 border-gray-200' : 'border-gray-300'} 
+                        className={`group p-4 bg-white border rounded-xl transition-all duration-200 
+                            hover:shadow-lg hover:border-gray-300
+                            ${task.completed ? 'bg-gray-50/50 border-gray-200' : 'border-gray-200'} 
                             ${task.priority === 'high'
-                                ? 'border-l-4 border-l-red-500'
+                                ? 'border-l-[6px] border-l-red-500'
                                 : task.priority === 'medium'
-                                    ? 'border-l-4 border-l-yellow-500'
-                                    : ''
+                                    ? 'border-l-[6px] border-l-yellow-500'
+                                    : 'border-l-[6px] border-l-green-500'
                             }`}
                     >
-                        <div className='flex items-center justify-between mb-2'>
+                        <div className='flex items-center justify-between mb-3'>
                             <div className='flex items-center gap-3 flex-1'>
-                                <input
-                                    type='checkbox'
-                                    checked={task.completed}
-                                    onChange={() => handleCompleteTask(task.id)}
-                                    className='w-5 h-5 rounded border-gray-300 text-red-500 focus:ring-red-500'
-                                />
-                                <span className={`flex-1 ${task.completed ? 'line-through text-gray-500' : 'text-gray-800'}`}>
+                                <div className='relative'>
+                                    <input
+                                        type='checkbox'
+                                        checked={task.completed}
+                                        onChange={() => handleCompleteTask(task.id)}
+                                        className='w-5 h-5 rounded-md border-2 border-gray-300 text-red-500 
+                                            focus:ring-red-500 focus:ring-offset-2 transition-all duration-200
+                                            hover:border-red-500 cursor-pointer'
+                                    />
+                                </div>
+                                <span className={`flex-1 font-medium transition-all duration-200
+                                    ${task.completed ? 'line-through text-gray-400' : 'text-gray-800'}`}>
                                     {task.title}
                                 </span>
                             </div>
 
-                            <div className='flex items-center gap-4'>
-                                <div className='flex items-center gap-2'>
+                            <div className='flex items-center gap-3'>
+                                <div className='flex items-center px-2 py-1 bg-gray-50 rounded-lg border border-gray-200 group-hover:border-gray-300 transition-all duration-200'>
                                     <button
                                         onClick={() => handleUpdatePomodoros(task.id, -1)}
-                                        className='px-2 py-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded'
+                                        className='w-6 h-6 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors'
                                     >
                                         -
                                     </button>
-                                    <span className='text-sm font-medium text-gray-600'>
-                                        {task.completedPomodoros}/{task.pomodoros}
-                                    </span>
+                                    <div className='flex items-center gap-1 mx-2 w-[72px] justify-center'>
+                                        <GiTomato className="w-4 h-4 text-red-500 flex-none" />
+                                        <div className='flex items-center gap-1'>
+                                            <span className='font-medium text-sm text-gray-700 w-5 text-center'>
+                                                {Math.min(task.completedPomodoros, 99)}
+                                            </span>
+                                            <span className='text-gray-400'>/</span>
+                                            <span className='font-medium text-sm text-gray-500 w-5 text-center'>
+                                                {Math.min(task.pomodoros, 99)}
+                                            </span>
+                                        </div>
+                                    </div>
                                     <button
                                         onClick={() => handleUpdatePomodoros(task.id, 1)}
-                                        className='px-2 py-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded'
+                                        className='w-6 h-6 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors'
+                                        disabled={task.pomodoros >= 99}
                                     >
                                         +
                                     </button>
                                 </div>
 
                                 <button
-                                    onClick={() => setShowNotes(showNotes === task.id ? null : task.id)}
-                                    className='p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-full transition-colors'
+                                    onClick={() => dispatch({ type: 'SET_ACTIVE_TASK', payload: task.id })}
+                                    className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-200
+                                        ${state.activeTaskId === task.id
+                                            ? 'bg-red-500 text-white hover:bg-red-600 shadow-sm'
+                                            : 'bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700'
+                                        }`}
+                                    title={state.activeTaskId === task.id ? 'Selected for Focus' : 'Select for Focus'}
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M12 20h9"></path>
-                                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    >
+                                        <circle cx="12" cy="12" r="10" />
+                                        <circle cx="12" cy="12" r="3" />
                                     </svg>
                                 </button>
 
-                                <button
-                                    onClick={() => handleDeleteTask(task.id)}
-                                    className='p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors'
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M3 6h18"></path>
-                                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                                    </svg>
-                                </button>
+                                <div className='flex items-center gap-1'>
+                                    <button
+                                        onClick={() => setShowNotes(showNotes === task.id ? null : task.id)}
+                                        className='w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors'
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M12 20h9"></path>
+                                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                        </svg>
+                                    </button>
+
+                                    <button
+                                        onClick={() => handleDeleteTask(task.id)}
+                                        className='w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors'
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M3 6h18"></path>
+                                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
-                        {task.category && (
-                            <div className='text-sm text-gray-500 mb-2'>
-                                Category: <span className='font-medium'>{task.category}</span>
-                            </div>
-                        )}
+                        <div className='pl-8 space-y-2'>
+                            {task.category && (
+                                <div className='flex items-center gap-2 text-sm text-gray-500'>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                                    </svg>
+                                    <span className='font-medium text-gray-600'>{task.category}</span>
+                                </div>
+                            )}
 
-                        {task.tags.length > 0 && (
-                            <div className='flex gap-2 mb-2 flex-wrap'>
-                                {task.tags.map((tag, index) => (
-                                    <span key={index} className='px-2 py-1 bg-gray-100 rounded-full text-sm text-gray-600'>
-                                        #{tag}
-                                    </span>
-                                ))}
-                            </div>
-                        )}
+                            {task.tags.length > 0 && (
+                                <div className='flex gap-1.5 flex-wrap'>
+                                    {task.tags.map((tag, index) => (
+                                        <span key={index} className='px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-md border border-gray-200'>
+                                            #{tag}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
 
                         {showNotes === task.id && (
-                            <div className='mt-2'>
+                            <div className='mt-3 pl-8'>
                                 <textarea
                                     value={task.notes}
                                     onChange={(e) => handleUpdateNotes(task.id, e.target.value)}
                                     placeholder='Add notes...'
-                                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-red-500 text-sm'
+                                    className='w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg 
+                                        focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 
+                                        placeholder-gray-400 resize-none transition-all duration-200'
                                     rows={3}
                                 />
                             </div>
                         )}
-
-                        <div className='mt-2 space-y-2'>
-                            {task.subtasks.map((subtask) => (
-                                <div key={subtask.id} className='flex items-center gap-2 pl-6'>
-                                    <input
-                                        type='checkbox'
-                                        checked={subtask.completed}
-                                        onChange={() => dispatch({
-                                            type: 'UPDATE_SUBTASK',
-                                            payload: { taskId: task.id, subtaskId: subtask.id, completed: !subtask.completed }
-                                        })}
-                                        className='w-4 h-4 rounded border-gray-300 text-red-500 focus:ring-red-500'
-                                    />
-                                    <span className={`text-sm ${subtask.completed ? 'line-through text-gray-500' : 'text-gray-700'}`}>
-                                        {subtask.title}
-                                    </span>
-                                </div>
-                            ))}
-                            <div className='flex gap-2 pl-6'>
-                                <input
-                                    type='text'
-                                    value={newSubtask}
-                                    onChange={(e) => setNewSubtask(e.target.value)}
-                                    placeholder='Add subtask...'
-                                    className='flex-1 px-3 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-red-500'
-                                    onKeyPress={(e) => {
-                                        if (e.key === 'Enter') {
-                                            handleAddSubtask(task.id);
-                                        }
-                                    }}
-                                />
-                                <button
-                                    onClick={() => handleAddSubtask(task.id)}
-                                    className='px-3 py-1 text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors'
-                                >
-                                    Add
-                                </button>
-                            </div>
-                        </div>
                     </div>
                 ))}
             </div>

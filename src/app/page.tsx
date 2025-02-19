@@ -19,11 +19,11 @@ export default function Home() {
             </div>
 
             {/* Right column - Timer and Analytics (3/5 width) */}
-            <div className='col-span-3 flex flex-col gap-4 h-full'>
+            <div className='col-span-3 flex flex-col gap-2 h-full'>
               <div className='flex-none'>
                 <Timer />
               </div>
-              <div className='flex-1 grid grid-cols-2 gap-6 min-h-0'>
+              <div className='flex-1 grid grid-cols-2 gap-2 min-h-0'>
                 <DailyProgress />
                 <TaskAnalytics />
               </div>

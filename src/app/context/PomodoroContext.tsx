@@ -10,7 +10,6 @@ export interface Task {
     tags: string[];
     priority: 'low' | 'medium' | 'high';
     notes: string;
-    subtasks: { id: string; title: string; completed: boolean }[];
     dueDate?: string;
     createdAt: string;
     estimatedDuration: number;
@@ -25,6 +24,7 @@ type TimerState = {
 type PomodoroState = {
     timer: TimerState;
     tasks: Task[];
+    activeTaskId: string | null;
     settings: {
         workDuration: number;
         shortBreakDuration: number;
@@ -42,8 +42,8 @@ export type PomodoroAction =
     | { type: 'UPDATE_TASK'; payload: Task }
     | { type: 'DELETE_TASK'; payload: string }
     | { type: 'COMPLETE_TASK'; payload: string }
-    | { type: 'ADD_SUBTASK'; payload: { taskId: string; subtask: { id: string; title: string; completed: boolean } } }
-    | { type: 'UPDATE_SUBTASK'; payload: { taskId: string; subtaskId: string; completed: boolean } }
+    | { type: 'SET_ACTIVE_TASK'; payload: string | null }
+    | { type: 'INCREMENT_TASK_POMODORO'; payload: string }
     | { type: 'UPDATE_TAGS'; payload: { taskId: string; tags: string[] } }
     | { type: 'UPDATE_PRIORITY'; payload: { taskId: string; priority: 'low' | 'medium' | 'high' } }
     | { type: 'UPDATE_NOTES'; payload: { taskId: string; notes: string } }
@@ -64,6 +64,7 @@ const initialState: PomodoroState = {
         currentMode: 'work',
     },
     tasks: [],
+    activeTaskId: null,
     settings: {
         workDuration: 25 * 60,
         shortBreakDuration: 5 * 60,
@@ -155,31 +156,6 @@ function pomodoroReducer(state: PomodoroState, action: PomodoroAction): Pomodoro
                     isRunning: false,
                 },
             };
-        case 'ADD_SUBTASK':
-            return {
-                ...state,
-                tasks: state.tasks.map(task =>
-                    task.id === action.payload.taskId
-                        ? { ...task, subtasks: [...task.subtasks, action.payload.subtask] }
-                        : task
-                ),
-            };
-        case 'UPDATE_SUBTASK':
-            return {
-                ...state,
-                tasks: state.tasks.map(task =>
-                    task.id === action.payload.taskId
-                        ? {
-                            ...task,
-                            subtasks: task.subtasks.map(subtask =>
-                                subtask.id === action.payload.subtaskId
-                                    ? { ...subtask, completed: action.payload.completed }
-                                    : subtask
-                            ),
-                        }
-                        : task
-                ),
-            };
         case 'UPDATE_TAGS':
             return {
                 ...state,
@@ -220,6 +196,26 @@ function pomodoroReducer(state: PomodoroState, action: PomodoroAction): Pomodoro
             return {
                 ...state,
                 timer: { ...state.timer, timeLeft: state.timer.timeLeft - 1 },
+            };
+        case 'SET_ACTIVE_TASK':
+            return {
+                ...state,
+                activeTaskId: action.payload,
+                timer: {
+                    ...state.timer,
+                    isRunning: false,
+                    timeLeft: state.settings.workDuration,
+                    currentMode: 'work'
+                }
+            };
+        case 'INCREMENT_TASK_POMODORO':
+            return {
+                ...state,
+                tasks: state.tasks.map(task =>
+                    task.id === action.payload
+                        ? { ...task, completedPomodoros: task.completedPomodoros + 1 }
+                        : task
+                )
             };
         default:
             return state;
